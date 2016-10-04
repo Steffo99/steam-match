@@ -1,7 +1,7 @@
 import requests
 
-# Get the Steam API key from steamkey.txt
-f = open("steamkey.txt", "r")
+# Get the Steam API key from steamapi.txt
+f = open("steamapi.txt", "r")
 key = f.read()
 f.close()
 del f

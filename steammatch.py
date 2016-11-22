@@ -28,8 +28,25 @@ def get_steam_games_owned(steamid: int) -> list:
     return games_owned
 
 
-def compare(steamids: list):
+def and_games(steamids: list):
     current = set(get_steam_games_owned(steamids.pop(0)))
     for player in steamids:
         current = current & set(get_steam_games_owned(player))
+    return current
+
+
+def or_games(steamids: list):
+    current = set(get_steam_games_owned(steamids.pop(0)))
+    for player in steamids:
+        current = current | set(get_steam_games_owned(player))
+    return current
+
+
+def diff_games(first, second):
+    current = set(get_steam_games_owned(first)) - set(get_steam_games_owned(second))
+    return current
+
+
+def xor_games(first, second):
+    current = set(get_steam_games_owned(first)) ^ set(get_steam_games_owned(second))
     return current

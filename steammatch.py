@@ -7,7 +7,7 @@ f.close()
 del f
 
 
-def get_steam_games_owned(steamid: int, freetoplay=True) -> list:
+def get_steam_games_owned(steamid: int, freetoplay=1) -> list:
     # Request the list of games played
     params = {
         "steamid": steamid,
@@ -43,7 +43,7 @@ def or_games(steamids: list):
 
 
 def diff_games(first, second):
-    current = set(get_steam_games_owned(first, False)) - set(get_steam_games_owned(second, False))
+    current = set(get_steam_games_owned(first, 0)) - set(get_steam_games_owned(second, 0))
     return current
 
 

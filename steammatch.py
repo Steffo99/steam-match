@@ -7,15 +7,16 @@ f.close()
 del f
 
 
-def get_steam_games_owned(steamid: int, freetoplay=1) -> list:
+def get_steam_games_owned(steamid: int, freetoplay=True) -> list:
     # Request the list of games played
     params = {
         "steamid": steamid,
         "key": key,
-        "include_played_free_games": freetoplay,
         "format": "json",
         "include_appinfo": 1
     }
+    if freetoplay:
+        params["include_played_free_games"] = 1
     r = requests.get("http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/", params=params)
     if r.status_code != 200:
         raise Exception("Error during the API request.")
@@ -43,7 +44,7 @@ def or_games(steamids: list):
 
 
 def diff_games(first, second):
-    current = set(get_steam_games_owned(first, 0)) - set(get_steam_games_owned(second, 0))
+    current = set(get_steam_games_owned(first, False)) - set(get_steam_games_owned(second, False))
     return current
 
 

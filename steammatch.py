@@ -6,6 +6,19 @@ key = f.read()
 f.close()
 del f
 
+class SteamGame:
+    def __init__(self, d: dict):
+        self.appid = int(d["appid"])
+        self.name = d["name"]
+        self.icon = d["img_icon_url"]
+        self.grid = d["img_logo_url"]
+
+    def __hash__(self) -> int:
+        return self.appid
+
+    def __eq__(self, other) -> bool:
+        return self.appid == other.appid
+
 
 def resolve_vanity(name: str) -> int:
     r = requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={key}&vanityurl={name}".format(key=key, name=name))
@@ -15,7 +28,7 @@ def resolve_vanity(name: str) -> int:
     if j["success"] == 42:
         raise Exception("Vanity url not found")
     elif j["success"] != 1:
-        raise Exception("Unknown exception: {message}".format(j["message"]))
+        raise Exception("Unknown exception: {message}".format(message=j["message"]))
     return j["steamid"]
 
 
@@ -32,16 +45,14 @@ def get_steam_games_owned(steamid: int, freetoplay=True) -> list:
     r = requests.get("http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/", params=params)
     if r.status_code != 200:
         raise Exception("Error during the API request.")
-    # Extract app ids
-    games_owned = list()
     data = r.json()
+    owned = list()
     for game in data["response"]["games"]:
-        games_owned.append(game["name"])
-    # Return the list
-    return games_owned
+        owned.append(SteamGame(game))
+    return owned
 
 
-def and_games(steamids: list):
+def and_games(steamids: list) -> set:
     for index, player in enumerate(steamids):
         try:
             steamids[index] = int(player)
@@ -53,7 +64,7 @@ def and_games(steamids: list):
     return current
 
 
-def or_games(steamids: list):
+def or_games(steamids: list) -> set:
     for index, player in enumerate(steamids):
         try:
             steamids[index] = int(player)
@@ -66,20 +77,26 @@ def or_games(steamids: list):
 
 
 def diff_games(first, second):
-    for index, player in enumerate(steamids):
-        try:
-            steamids[index] = int(player)
-        except ValueError:
-            steamids[index] = int(resolve_vanity(player))
-    current = set(get_steam_games_owned(first, False)) - set(get_steam_games_owned(second, False))
-    return current
+    try:
+        first = int(first)
+    except ValueError:
+        first = int(resolve_vanity(first))
+    try:
+        second = int(second)
+    except ValueError:
+        second = int(resolve_vanity(second))
+    result = set(get_steam_games_owned(first)) - set(get_steam_games_owned(second))
+    return result
 
 
 def xor_games(first, second):
-    for index, player in enumerate(steamids):
-        try:
-            steamids[index] = int(player)
-        except ValueError:
-            steamids[index] = int(resolve_vanity(player))
-    current = set(get_steam_games_owned(first)) ^ set(get_steam_games_owned(second))
-    return current
+    try:
+        first = int(first)
+    except ValueError:
+        first = int(resolve_vanity(first))
+    try:
+        second = int(second)
+    except ValueError:
+        second = int(resolve_vanity(second))
+    result = set(get_steam_games_owned(first)) ^ set(get_steam_games_owned(second))
+    return result

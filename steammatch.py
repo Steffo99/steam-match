@@ -1,7 +1,7 @@
 import requests
 
 # Get the Steam API key from steamapi.txt
-f = open("steamapi.txt", "r")
+f = open("/var/www/smweb/smweb/steamapi.txt", "r")
 key = f.read()
 f.close()
 del f
@@ -23,7 +23,7 @@ class SteamGame:
 def resolve_vanity(name: str) -> int:
     r = requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={key}&vanityurl={name}".format(key=key, name=name))
     if r.status_code != 200:
-        raise Exception("Error during the API request.")
+        raise Exception("Error during the API request: " + str(r.status_code) + "\n" + str(r.content))
     j = r.json()["response"]
     if j["success"] == 42:
         raise Exception("Vanity url not found")

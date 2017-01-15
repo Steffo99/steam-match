@@ -6,6 +6,11 @@ key = f.read()
 f.close()
 del f
 
+class InvalidVanityURLError(Exception):
+    def __init__(self, error, vanity):
+        self.error = error
+        self.vanity = vanity
+
 class SteamGame:
     def __init__(self, d: dict):
         self.appid = int(d["appid"])
@@ -26,7 +31,7 @@ def resolve_vanity(name: str) -> int:
         raise Exception("Error during the API request.")
     j = r.json()["response"]
     if j["success"] == 42:
-        raise Exception("Vanity url not found")
+        raise InvalidVanityURLError("Vanity url not found", name)
     elif j["success"] != 1:
         raise Exception("Unknown exception: {message}".format(message=j["message"]))
     return j["steamid"]

@@ -28,7 +28,7 @@ class SteamGame:
 def resolve_vanity(name: str) -> int:
     r = requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={key}&vanityurl={name}".format(key=key, name=name))
     if r.status_code != 200:
-        raise Exception("Error during the API request.")
+        raise Exception("Error during the API request: " + str(r.status_code) + "\n" + str(r.content))
     j = r.json()["response"]
     if j["success"] == 42:
         raise InvalidVanityURLError("Vanity url not found", name)

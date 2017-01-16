@@ -61,7 +61,7 @@ def get_steam_games_owned(steamid: int, freetoplay=True) -> list:
     if r.status_code != 200:
         raise SteamRequestError("Error during the API request.")
     data = r.json()
-    if games not in data["response"]:
+    if 'games' not in data["response"]:
         raise PrivateProfileError(steamid)
     owned = list()
     for game in data["response"]["games"]:

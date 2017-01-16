@@ -6,10 +6,20 @@ key = f.read()
 f.close()
 del f
 
-class InvalidVanityURLError(Exception):
+class SteamAPIError(Exception):
+    pass
+
+class SteamRequestError(SteamAPIError):
+    pass
+
+class InvalidVanityURLError(SteamAPIError):
     def __init__(self, error, vanity):
         self.error = error
         self.vanity = vanity
+
+class PrivateProfileError(SteamAPIError):
+    def __init__(self, steamid):
+        self.steamid = steamid
 
 class SteamGame:
     def __init__(self, d: dict):
@@ -28,12 +38,12 @@ class SteamGame:
 def resolve_vanity(name: str) -> int:
     r = requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={key}&vanityurl={name}".format(key=key, name=name))
     if r.status_code != 200:
-        raise Exception("Error during the API request: " + str(r.status_code) + "\n" + str(r.content))
+        raise SteamRequestError("Error during the API request: {}{}".format(r.status_code, r.content))
     j = r.json()["response"]
     if j["success"] == 42:
         raise InvalidVanityURLError("Vanity url not found", name)
     elif j["success"] != 1:
-        raise Exception("Unknown exception: {message}".format(message=j["message"]))
+        raise SteamAPIError("Unknown exception: {message}".format(message=j["message"]))
     return j["steamid"]
 
 
@@ -49,8 +59,10 @@ def get_steam_games_owned(steamid: int, freetoplay=True) -> list:
         params["include_played_free_games"] = 1
     r = requests.get("http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/", params=params)
     if r.status_code != 200:
-        raise Exception("Error during the API request.")
+        raise SteamRequestError("Error during the API request.")
     data = r.json()
+    if games not in data["response"]:
+        raise PrivateProfileError(steamid)
     owned = list()
     for game in data["response"]["games"]:
         owned.append(SteamGame(game))
